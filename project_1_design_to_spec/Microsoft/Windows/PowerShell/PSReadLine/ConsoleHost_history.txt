@@ -1,1 +1,2 @@
 & "c:/Program Files/Git/cmd/git.exe" -C "d:/Profiles/nm8011/Sources/Repo/IGME-340" -c "core.editor=code --wait --reuse-window" revert --no-edit 20014aa6be3d2d67962b49b8d129f6ec0631cc35
+& "c:/Program Files/Git/cmd/git.exe" -C "d:/Profiles/nm8011/Sources/Repo/IGME-340" -c "core.editor=code --wait --reuse-window" revert --no-edit 5bf6208082abbbdfc31ed157fe62fbf39a2a9e48
