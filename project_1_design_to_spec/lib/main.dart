@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -59,192 +57,37 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   //TextStyles
-  TextStyle _itemTextStyle(
-      Color fontColor, double customFontSize, double textHeight,
-      [FontWeight fontWeight = FontWeight.normal]) {
-    return TextStyle(
-      fontFamily: 'VT323',
-      color: fontColor,
-      fontSize: customFontSize,
-      height: textHeight,
-      fontWeight: fontWeight,
-    );
-  }
-
-  TextStyle _retroComputer(
-      Color fontColor, double fontSize, double textHeight, FontWeight bold) {
-    return TextStyle(
-        fontFamily: 'RetroComputer',
-        color: fontColor,
-        fontSize: fontSize,
-        height: textHeight,
-        fontWeight: bold);
-  }
-
-  TextButton _individualItems(
-      String imgFileName, String itemName, String itemText,
-      [String description =
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"]) {
-    return TextButton(
-      onPressed: () {
-        _itemDialog(itemName, imgFileName, description);
-      },
-      child: SizedBox(
-        height: 150,
-        child: Row(
-          children: [
-            //Image
-            _styleImage(itemName, imgFileName, 150),
-
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.all(5.0),
-                color: Color(0xFF686868),
-                width: 220,
-                height: 200,
-                child: SingleChildScrollView(
-                    child: Text(itemText,
-                        style: _itemTextStyle(Colors.white, 20, 1.2))),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container _styleImage(String itemName, String imgFileName, double _width) {
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.only(top: 5, bottom: 10),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color(0xFFFFFFFF),
-          width: 6.0,
-        ),
-        color: const Color(0xFF324E44),
-      ),
-      //Plank Inside Box
-      child: Column(
-        children: [
-          Text(
-            itemName,
-            style: _itemTextStyle(Colors.white, 24, 1.2),
-          ),
-          Image.asset(
-            imgFileName,
-            height: 89,
-            width: 100,
-          ),
-        ],
-      ),
-    );
-  }
-
-  _showDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-          child: AlertDialog(
-            title: Text(
-                "About\n\nCreated by Napolian Myat\n\nBased on the work done in 235's Design to Spec Homework.\n\nSeptember 6, 2024",
-                style: _itemTextStyle(Colors.black, 20, 1.2, FontWeight.w100)),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(0, 143, 145, 144)),
-                ),
-                child: Text(
-                  "OK",
-                  style: _itemTextStyle(Colors.black, 20, 1.2, FontWeight.w100),
-                ),
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  _itemDialog(String itemName, String imgFileName, String description) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-          child: AlertDialog(
-            backgroundColor: Color(0xFF686868),
-            title: Text(itemName,
-                style: _itemTextStyle(Colors.white, 24, 1.2, FontWeight.w100)),
-            actions: [
-              //Image
-              Container(
-                width: 300,
-                height: 260,
-                padding: const EdgeInsets.only(top: 5, bottom: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color(0xFFFFFFFF),
-                    width: 6.0,
-                  ),
-                  color: const Color(0xFF324E44),
-                ),
-                //Plank Inside Box
-                child: Column(
-                  children: [
-                    Image.asset(
-                      imgFileName,
-                      height: 230,
-                      width: 240,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  height: 200,
-                  color: Colors.white,
-                  padding: EdgeInsets.all(10),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      description,
-                      style: _itemTextStyle(Colors.black, 20, 1.2),
-                    ),
-                  ),
-                ),
-              ),
-
-              //Button
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                      const Color.fromARGB(200, 205, 212, 208)),
-                ),
-                child: Text(
-                  "Close",
-                  style: _itemTextStyle(Colors.black, 20, 1.2, FontWeight.w100),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+  final TextStyle itemTextStyle = TextStyle(
+    fontFamily: 'VT323',
+    color: Colors.white,
+    fontSize: 20,
+    height: 1.2,
+  );
+  final TextStyle capTextStyle = TextStyle(
+    fontFamily: 'RetroComputer',
+    color: Colors.white,
+    fontSize: 24,
+    height: 1.2,
+  );
+  final TextStyle capTextStyleSmall = TextStyle(
+    fontFamily: 'RetroComputer',
+    color: Colors.white,
+    fontSize: 20,
+    height: 1.2,
+  );
   @override
   Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
         backgroundColor: Colors.grey,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
@@ -256,21 +99,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 SvgPicture.asset(
                   'assets/images/pickaxe.svg',
                   height: 35,
-                  // ignore: deprecated_member_use
                   color: Colors.white,
                 ),
                 const Padding(padding: EdgeInsets.all(10.0)),
                 Text(
                   widget.title,
-                  style:
-                      _retroComputer(Colors.white, 24, 1.2, FontWeight.normal),
+                  style: const TextStyle(
+                    fontFamily: 'RetroComputer',
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
                 ),
               ],
             ),
             TextButton(
-              onPressed: () {
-                _showDialog();
-              },
+              onPressed: () {},
               child:
                   const Icon(Icons.account_circle_rounded, color: Colors.black),
             ),
@@ -300,15 +143,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     width: 7.0,
                   ),
                   color: const Color(0xFF324E44),
-                  gradient: LinearGradient(
-                    begin: FractionalOffset.topLeft,
-                    end: FractionalOffset.bottomRight,
-                    colors: [
-                      Color(0x244D3E).withAlpha(255),
-                      Color(0xE8FDF5).withAlpha(255),
-                    ],
-                    stops: [0.0, 1.0],
-                  ),
                 ),
                 child: Image.asset(
                   'assets/images/oaktree.png',
@@ -319,14 +153,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 500,
                 padding: const EdgeInsets.all(10.0),
                 color: const Color(0xFF686868),
-                child: Column(
+                child: const Column(
                   children: [
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         'The Oak Tree',
-                        style: _retroComputer(
-                            Colors.white, 24, 1.2, FontWeight.bold),
+                        style: TextStyle(
+                            fontFamily: 'RetroComputer',
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     Text(
@@ -344,44 +181,226 @@ class _MyHomePageState extends State<MyHomePage> {
 
               //Item List
               Container(
-                height: 680,
+                height: 700,
+                width: double.infinity,
                 color: const Color(0xFF35363D),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Padding(padding: EdgeInsets.all(0.0)),
+
                     //Planks
-                    _individualItems(
-                      "assets/images/planks.png",
-                      "Planks",
-                      "Planks are common blocks used as building blocks and in crafting recipes. They are one of the first things that a player can craft in",
+                    SizedBox(
+                      height: 150,
+                      child: Row(
+                        children: [
+                          //add padding between each item
+                          const Padding(
+                            padding: EdgeInsets.all(5.0),
+                          ),
+                          //Plank Image
+                          Container(
+                            width: 150,
+                            padding: const EdgeInsets.only(top: 5, bottom: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFFFFFFF),
+                                width: 6.0,
+                              ),
+                              color: const Color(0xFF324E44),
+                            ),
+                            //Plank Inside Box
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Planks',
+                                  style: TextStyle(
+                                    fontFamily: 'VT323',
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/images/planks.png',
+                                  height: 89,
+                                  width: 100,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(5.0),
+                            color: Color(0xFF686868),
+                            width: 220,
+                            height: 200,
+                            child: Text(
+                                "Planks are common blocks used as building blocks and in crafting recipes. They are one of the first things that a player can craft in",
+                                style: itemTextStyle),
+                          ),
+                        ],
+                      ),
                     ),
 
                     //Sticks
-                    _individualItems(
-                      "assets/images/stick.png",
-                      "Stick",
-                      "A stick is an item used for crafting many tools and items.",
+                    SizedBox(
+                      height: 150,
+                      child: Row(
+                        children: [
+                          //add padding between each item
+                          const Padding(
+                            padding: EdgeInsets.all(5.0),
+                          ),
+                          //Stick Image
+                          Container(
+                            width: 150,
+                            padding: const EdgeInsets.only(top: 5, bottom: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFFFFFFF),
+                                width: 6.0,
+                              ),
+                              color: const Color(0xFF324E44),
+                            ),
+                            //stick Inside Box
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Stick',
+                                  style: TextStyle(
+                                    fontFamily: 'VT323',
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/images/stick.png',
+                                  height: 89,
+                                  width: 100,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(5.0),
+                            color: Color(0xFF686868),
+                            width: 220,
+                            height: 200,
+                            child: Text(
+                                "A stick is an item used for crafting many tools and items.",
+                                style: itemTextStyle),
+                          ),
+                        ],
+                      ),
                     ),
 
                     //Chests
-                    _individualItems(
-                      "assets/images/chest.png",
-                      "Chests",
-                      "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
+                    SizedBox(
+                      height: 150,
+                      child: Row(
+                        children: [
+                          //add padding between each item
+                          const Padding(
+                            padding: EdgeInsets.all(5.0),
+                          ),
+                          //Chests Image
+                          Container(
+                            width: 150,
+                            padding: const EdgeInsets.only(top: 5, bottom: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFFFFFFF),
+                                width: 6.0,
+                              ),
+                              color: const Color(0xFF324E44),
+                            ),
+                            //Chests Inside Box
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Chests',
+                                  style: TextStyle(
+                                    fontFamily: 'VT323',
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/images/chest.png',
+                                  height: 89,
+                                  width: 100,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(5.0),
+                            color: Color(0xFF686868),
+                            width: 220,
+                            height: 200,
+                            child: Text(
+                                "Planks are common blocks used as building blocks and in crafting recipes. They are one of the first things that a player can craft in",
+                                style: itemTextStyle),
+                          ),
+                        ],
+                      ),
                     ),
 
                     //Stairs
-                    _individualItems(
-                      "assets/images/stairs.png",
-                      "Stairs",
-                      "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. ",
+                    SizedBox(
+                      height: 150,
+                      child: Row(
+                        children: [
+                          //add padding between each item
+                          const Padding(
+                            padding: EdgeInsets.all(5.0),
+                          ),
+                          //Stair Image
+                          Container(
+                            width: 150,
+                            padding: const EdgeInsets.only(top: 5, bottom: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFFFFFFFF),
+                                width: 6.0,
+                              ),
+                              color: const Color(0xFF324E44),
+                            ),
+                            //Stair Inside Box
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Stairs',
+                                  style: TextStyle(
+                                    fontFamily: 'VT323',
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                Image.asset(
+                                  'assets/images/stairs.png',
+                                  height: 89,
+                                  width: 100,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(5.0),
+                            color: Color(0xFF686868),
+                            width: 220,
+                            height: 200,
+                            child: Text(
+                                "Planks are common blocks used as building blocks and in crafting recipes. They are one of the first things that a player can craft in",
+                                style: itemTextStyle),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
 
               //BlankScreen
-              Container(height: 10, color: Colors.white),
               Container(
                 height: 300,
                 decoration: BoxDecoration(
@@ -390,21 +409,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: SizedBox(
+                child: Container(
                   width: 400,
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "Trees are pretty cool, right?",
-                          style: _retroComputer(
-                              Colors.white, 24, 1.2, FontWeight.normal),
+                          style: capTextStyle,
                           textAlign: TextAlign.center,
                         ),
                         Text(
                           "Copyright 2022 RIT School of Interactive Games and Media",
-                          style: _retroComputer(
-                              Colors.white, 20, 1.2, FontWeight.normal),
+                          style: capTextStyleSmall,
                           textAlign: TextAlign.center,
                         ),
                       ]),
