@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,9 +38,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  ////////////////////////////////////////////////////////////////
+  //VARIABLES
+  ////////////////////////////////////////////////////////////////
   String searchedURL =
-      "https://api.giphy.com/v1/gifs/search?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&q=cats&limit=10&offset=0&rating=g&lang=en&bundle=messaging_non_clips";
-  Color standardBlue = Color(0xFF1e96f4);
+      "https://api.giphy.com/v1/gifs/trending?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&limit=10&offset=0&rating=g&bundle=messaging_non_clips";
+  Color standardBlue = const Color(0xFF1e96f4);
   List<int> numList = <int>[
     10,
     20,
@@ -45,10 +51,20 @@ class _MyHomePageState extends State<MyHomePage> {
     40,
     50,
   ];
+  int? _valueSelected = 10;
   String? searchedTerm;
   int? numResults = 10;
+  int? numResultsShown = 10;
+  List<String> listImgURL = [];
+  List jsonData = [];
+  List<TextButton> listImgWidget = [];
+  TextEditingController searchTermController = TextEditingController();
+  String validationText = "";
 
-  ///TextStyle
+//////////////////////////////////////////////////////////////////
+//METHODS
+//////////////////////////////////////////////////////////////////
+  ///Style Text
   Text myText(String textString, double fontsize_,
       [fontWeight_ = FontWeight.normal,
       fontColor_ = Colors.white,
@@ -63,44 +79,149 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  ///Get search query
   void searchQueryURL() {
     if (searchedTerm != null) {
       searchedURL =
           "https://api.giphy.com/v1/gifs/search?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&q=$searchedTerm&limit=$numResults&offset=0&rating=g&lang=en&bundle=messaging_non_clips";
+      setState(() {
+        validationText = "";
+      });
     } else {
-      searchedURL =
-          "https://api.giphy.com/v1/gifs/search?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&q=cats&limit=10&offset=0&rating=g&lang=en&bundle=messaging_non_clips";
+      setState(() {
+        validationText = "Please enter a search term";
+      });
     }
+    doSearchTerm();
   }
 
   Future<void> doRefresh() async {
     await Future.delayed(
-      Duration(seconds: 2),
+      const Duration(seconds: 2),
     );
     print("Done Refreshing");
   }
 
-  Future doRandom() async {
+  //utilize users search term
+  Future doSearchTerm() async {
     var response = await http.get(Uri.parse(searchedURL));
     if (response.statusCode == 200) {
       var jsonResp = jsonDecode(response.body);
 
-      //get map
-      //get map[0]
-      //get key "data" values
+      listImgURL.clear(); //clear list
+      jsonData.clear();
+
+      //get key "data" values of map[0]
+      setState(() {
+        jsonData = jsonResp["data"];
+        displayNumberResults();
+      });
       //for each, get the url key values and add to list
 
-      // print(jsonResp);
+      for (int i = 0; i < jsonData.length; i++) {
+        listImgURL.add(
+            "https://media.giphy.com/media/${jsonData[i]["id"]}/giphy.${jsonData[i]["type"]}"); //convert to be usable by networkimage
+        // print(jsonData[i]["id"]); //test
+      }
+
+      // print(jsonResp); //test
+      // print("listOfImages Length = ${listImgURL.length}"); //test
+      populateImageURL();
+      // print(listImgWidget); //test
     } else {
       print("ERROR: $response.statusCode");
     }
+  }
+
+  displayNumberResults() {
+    numResultsShown = jsonData.length;
+  }
+
+  _enlargeImage(int index, String url) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          child: Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(10),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    myText("${jsonData[index]["title"]}", 24, FontWeight.bold,
+                        Colors.black),
+                    Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                          image: DecorationImage(image: NetworkImage(url))),
+                    ),
+                    Text("URL: $url"),
+                    Text("Rating: ${jsonData[index]["rating"]}"),
+                    Text("Alternate Text:  ${jsonData[index]["alt_text"]}"),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                            const Color.fromARGB(200, 205, 212, 208)),
+                      ),
+                      child: const Text("Close"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  ///Return trending gifs onload
+  List<TextButton> showTrendingGifs() {
+    searchedURL =
+        "https://api.giphy.com/v1/gifs/trending?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&limit=10&offset=0&rating=g&bundle=messaging_non_clips";
+    doSearchTerm();
+    return listImgWidget;
+  }
+
+  void populateImageURL() {
+    listImgWidget.clear(); //clear widget
+    setState(() {
+      listImgWidget = listImgURL.map<TextButton>((String value) {
+        return TextButton(
+          child: Container(
+            decoration: BoxDecoration(
+                image: DecorationImage(
+              image: NetworkImage(value),
+              fit: BoxFit.cover,
+            )),
+          ),
+          onPressed: () {
+            _enlargeImage(listImgURL.indexOf(value), value);
+            print("IsClicked");
+          },
+        );
+      }).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showTrendingGifs();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF1e96f4),
+        backgroundColor: standardBlue,
         title: Row(children: [
           //GIF ICON
           Container(
@@ -140,6 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
               //SEARCH TERMS
               TextField(
                 keyboardType: TextInputType.name,
+                controller: searchTermController,
                 decoration: InputDecoration(
                   labelText: "Search Term",
                   hintText: "What do you want to find?",
@@ -167,16 +289,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 onChanged: (value) {
-                  searchedTerm = value;
+                  setState(() {
+                    searchedTerm = value;
+                  });
                 },
               ),
-              const SizedBox(height: 10), //spacing
+              SizedBox(
+                height: 20,
+                child: Text(
+                  "$validationText",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ), //spacing
               //NUMBER OF RESULTS
               DropdownButtonFormField<int>(
-                value: numList[0],
+                value: _valueSelected,
                 decoration: const InputDecoration(
                   fillColor: Colors.white,
                   filled: true,
+                  label: Text("Number of Results",
+                      style: TextStyle(
+                          color: Colors.black, fontWeight: FontWeight.bold)),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                         color: Colors.black,
@@ -199,7 +332,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  numResults = value;
+                  setState(() {
+                    numResults = value;
+                    _valueSelected = value;
+                  });
                 },
               ),
 
@@ -211,7 +347,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   SizedBox(
                     width: 87,
                     child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            searchedTerm = null;
+                            numResults = 10;
+                            _valueSelected = 10;
+                            searchTermController.clear();
+                            showTrendingGifs();
+                          });
+                        },
                         style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(5.0),
@@ -224,7 +368,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     width: 155,
                     child: ElevatedButton(
                         onPressed: () {
-                          doRandom();
+                          searchQueryURL();
                         },
                         style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -235,59 +379,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   )
                 ],
               )),
+              SizedBox(
+                height: 15,
+                child: myText("Number of Results: $numResultsShown", 12,
+                    FontWeight.bold, Colors.black),
+              ),
 
               ///GIF FOUND!
               Expanded(
-                child: GridView.count(
-                  primary: false,
-                  padding: const EdgeInsets.all(5),
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  crossAxisCount: 2,
-                  children: <Widget>[
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[100],
-                      child: const Text("He'd have you all unravel at the"),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[200],
-                      child: const Text('Heed not the rabble'),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[300],
-                      child: const Text('Sound of screams but the'),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[400],
-                      child: const Text('Who scream'),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[500],
-                      child: const Text('Revolution is coming...'),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      padding: const EdgeInsets.all(8),
-                      color: Colors.teal[600],
-                      child: const Text('Revolution, they...'),
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    primary: false,
+                    padding: const EdgeInsets.all(5),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    crossAxisCount: 2,
+                    children: listImgWidget,
+                  ),
                 ),
               )
             ],
