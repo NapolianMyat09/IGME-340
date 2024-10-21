@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -59,7 +60,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List jsonData = [];
   List<TextButton> listImgWidget = [];
   TextEditingController searchTermController = TextEditingController();
+  TextEditingController offsetTermController = TextEditingController();
   String validationText = "";
+  int? offset = 0;
 
 //////////////////////////////////////////////////////////////////
 //METHODS
@@ -75,7 +78,8 @@ class _MyHomePageState extends State<MyHomePage> {
           fontSize: fontsize_,
           fontWeight: fontWeight_,
           color: fontColor_,
-          height: textHeight_),
+          height: textHeight_,
+          fontFamily: 'VT323'),
     );
   }
 
@@ -83,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void searchQueryURL() {
     if (searchedTerm != null) {
       searchedURL =
-          "https://api.giphy.com/v1/gifs/search?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&q=$searchedTerm&limit=$numResults&offset=0&rating=g&lang=en&bundle=messaging_non_clips";
+          "https://api.giphy.com/v1/gifs/search?api_key=Q82iASwchXrmxgAv4ISLXApHrHUBnp3x&q=$searchedTerm&limit=$numResults&offset=$offset&rating=g&lang=en&bundle=messaging_non_clips";
       setState(() {
         validationText = "";
       });
@@ -338,6 +342,46 @@ class _MyHomePageState extends State<MyHomePage> {
                   });
                 },
               ),
+              const SizedBox(height: 20),
+              TextField(
+                keyboardType: TextInputType.number,
+                controller: offsetTermController,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ],
+                decoration: InputDecoration(
+                  labelText: "Offset",
+                  hintText: "Enter the starting point of the search",
+                  fillColor: Colors.white,
+                  filled: true,
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  labelStyle: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black,
+                      width: 3,
+                    ),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    int? tempNum = int.tryParse(offsetTermController.text);
+                    offset = tempNum;
+                  });
+                },
+              ),
 
               //BUTTONS
               SizedBox(
@@ -354,6 +398,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             _valueSelected = 10;
                             searchTermController.clear();
                             showTrendingGifs();
+
+                            //doesnt reset offset because of choice
                           });
                         },
                         style: ElevatedButton.styleFrom(
