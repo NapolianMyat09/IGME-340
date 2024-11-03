@@ -49,9 +49,12 @@ class _MyHomePageState extends State<MyHomePage> {
   String selectedBreed = "Affenpinscher";
   int selectedBreedIndex = 0;
 
+  List<TextButton> listImgWidget = [];
+
+
   //API
   String dogAPIURL = "https://dog.ceo/api/breeds/image/random";
-  String imageURL = "";
+  List imageURL = [];
 // #endregion
 
   Text customText(String textString, double fontSize,
@@ -184,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print("SelectedBreedIndex: $selectedBreedIndex");
 
     String tempURL =
-        "https://dog.ceo/api/breed/${listBreedURLFormat[selectedBreedIndex]}/images/random/";
+        "https://dog.ceo/api/breed/${listBreedURLFormat[selectedBreedIndex]}/images/random/10";
     return tempURL;
   }
 
@@ -201,11 +204,69 @@ class _MyHomePageState extends State<MyHomePage> {
       print(imageURL); //test
 
       // print(jsonResp); //test
-
+      populateImageURL();
       return imageURL;
     } else {
       print("Error: $response.statusCode");
     }
+  }
+  void enlargeImage(int index, String url) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          child: Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                          image: DecorationImage(image: NetworkImage(url))),
+                    ),
+                    Text("URL: $url"),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                            const Color.fromARGB(200, 205, 212, 208)),
+                      ),
+                      child: const Text("Close"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  void populateImageURL() {
+      listImgWidget.clear(); //clear widget
+      setState(() {
+        listImgWidget = imageURL.map<TextButton>((dynamic value) {
+          return TextButton(
+            child: Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                image: NetworkImage(value),
+                fit: BoxFit.cover,
+              )),
+            ),
+            onPressed: () {
+              enlargeImage(imageURL.indexOf(value), value);
+              print("IsClicked");
+            },
+          );
+        }).toList();
+    });
   }
 
 //Initial State
@@ -262,20 +323,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: customText("Search", 15, FontWeight.w500)),
 
               //Images
-              Expanded(
-                child: Container(
-                  height: 300,
-                  width: 300,
-                  // color: lightBrown,
-                  // decoration: BoxDecoration(
-                  //     image: DecorationImage(
-                  //   image: NetworkImage("$getListOfImages"),
-                  //   fit: BoxFit.cover,
-                  // )),
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage("$imageURL"),
-                    ),
+               Expanded(
+                child: SingleChildScrollView(
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    primary: false,
+                    padding: const EdgeInsets.all(5),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    crossAxisCount: 2,
+                    children: listImgWidget,
                   ),
                 ),
               ),
