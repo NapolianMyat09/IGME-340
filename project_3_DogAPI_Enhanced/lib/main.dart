@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +28,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+//Create State for MyHomePage
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -36,53 +39,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-// #region VARIABLES
   //Color Palette for this API
   Color lightBrown = const Color(0xffe5b17f);
   Color mediumBrown = const Color(0xffc99160);
   static const Color darkBrown = Color(0xff5e3924);
 
-  //USERINPUT
-  String breedName = "";
-  TextEditingController breedController = TextEditingController();
-  String dropDownValue = "";
-  List<String> listBreedURLFormat = [];
-  List<String> listBreed = [];
-  String selectedBreed = "Affenpinscher";
-  int selectedBreedIndex = 0;
-  String randImageURL = "";
-  List<TextButton> listImgWidget = [];
-  List<String> savedImagesPreset = [];
+  int _selectedIndex = 0; //index used to navigate between pages
 
-  //API
-  String dogAPIURL = "https://dog.ceo/api/breeds/image/random";
-  String dogAPIURLRand = "https://dog.ceo/api/breeds/image/random";
-  List imageURL = [];
-// #endregion
-  TextEditingController counterTermController = TextEditingController();
-  int _counter = 1;
-  int maxCounter = 20;
+  //List of Pages
+  static final List<Widget> _pages = <Widget>[
+    MainPage(),
+    DocumentationPage(),
+  ];
 
-  //pref
-  late SharedPreferences myPrefs;
-
-  void _incrementCounter() {
+  ///
+  ///Used in BottomNavigationBar, when tab is clicked, get the index and change _selectedIndex to new index
+  ///Ultimately Changing Pages
+  void _onItemTapped(int index) {
     setState(() {
-      _counter++;
-      if (_counter > maxCounter) {
-        _counter = maxCounter;
-      }
-      counterTermController.text = _counter.toString();
-    });
-  }
-
-  void _decrementCounter() {
-    setState(() {
-      _counter--;
-      if (_counter <= 0) {
-        _counter = 1;
-      }
-      counterTermController.text = _counter.toString();
+      // print("Selected Index = $_selectedIndex"); //test
+      _selectedIndex = index;
+      // print("Tap!, Selected Index = $_selectedIndex"); //test
     });
   }
 
@@ -107,32 +84,125 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  SizedBox inputTextField(IconData icon_, String text_, TextInputType inputType,
-      TextEditingController inputController, Function(String) onChanged_) {
-    return SizedBox(
-      child: TextField(
-          keyboardType: inputType,
-          controller: inputController,
-          obscureText: false,
-          decoration: InputDecoration(
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-              labelText: text_,
-              icon: Icon(icon_,
-                  size: 40, color: Colors.grey), //Add icon before textfield
-              //X icon to clear inputted values
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () => {
-                  setState(() {
-                    inputController.text = '';
-                    onChanged_(
-                        ''); //without this, when clearing, there exists previous set value which is never cleared
-                  }),
-                }, //clears the input
-              )),
-          onChanged:
-              onChanged_), //calls function which changes the string text ie. Email, to user inputs
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      //TitleBar
+      appBar: AppBar(
+          backgroundColor: mediumBrown,
+          title: Row(
+            children: [
+              Expanded(child: Image.asset("assets/images/paws.png")),
+              customText(widget.title, 28),
+              Expanded(child: Image.asset("assets/images/paws.png")),
+            ],
+          )),
+      body: Center(
+        child: _pages.elementAt(_selectedIndex),
+      ),
+
+      //Create a bottom navigation bar to navigate between main content page and documentation page
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: mediumBrown,
+        items: const <BottomNavigationBarItem>[
+          //HomePage Tab
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Main",
+          ),
+          //Documentation Page Tab
+          BottomNavigationBarItem(
+            icon: Icon(Icons.description),
+            label: "Documentation",
+          ),
+        ],
+        currentIndex: _selectedIndex, //what index the current page is at
+        selectedItemColor: Colors.white, //the page selected color indication
+        onTap: _onItemTapped, //when clicked, call this function
+      ),
+    );
+  }
+}
+
+//Create State for MainPage
+class MainPage extends StatefulWidget {
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  //VARIABLES
+  //Color Palette for this API
+  static const Color lightBrown = Color(0xffe5b17f);
+  static const Color darkBrown = Color(0xff5e3924);
+
+  //USERINPUT
+  String breedName = "";
+  TextEditingController breedController = TextEditingController();
+  String dropDownValue = "";
+  List<String> listBreedURLFormat = [];
+  List<String> listBreed = [];
+  String selectedBreed = "Affenpinscher";
+  int selectedBreedIndex = 0;
+  String randImageURL = "";
+
+  List<Container> listImgWidget = [];
+  List<String> savedImagesPreset = [];
+  int? _selectedSearchCount;
+  int? displayCount = 0;
+  List<int> numberList = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ]; //dropdown number list
+  List<DropdownMenuItem> numberDropdown = [];
+
+  //API
+  String dogAPIURL = "https://dog.ceo/api/breeds/image/random";
+  String dogAPIURLRand = "https://dog.ceo/api/breeds/image/random";
+  List imageURL = [];
+
+  //pref
+  late SharedPreferences myPrefs;
+
+  ///Return displayImageType
+  String displayImageType = "";
+
+  ///
+  /// Friendly Text Formatter,
+  /// based on the string, fontsize, fontweight, fontcolor, textHeight, alignment
+  ///
+  Text customText(String textString, double fontSize,
+      [fontWeight = FontWeight.normal,
+      fontColor = darkBrown,
+      textHeight = 1.2,
+      TextAlign alignment = TextAlign.center]) {
+    return Text(
+      textString,
+      textAlign: alignment,
+      style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: fontColor,
+          height: textHeight,
+          fontFamily: 'Eczar'),
     );
   }
 
@@ -147,26 +217,25 @@ class _MyHomePageState extends State<MyHomePage> {
     return breedName;
   }
 
+  ///
   ///DropDownButton for list of breeds of dogs
+  ///
   SizedBox dropDownButton() {
     return SizedBox(
         width: 400,
-        child: DropdownButton<String>(
-          menuWidth: 250,
-          menuMaxHeight: 300,
-          isExpanded: true, //sends dropdown carrot to the foremost right
-          value: valueBreedName(),
-          underline: Container(), //hide bottom shadow
-          items: listBreed.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value,
-                  style: const TextStyle(fontWeight: FontWeight.normal)),
-            );
-          }).toList(),
-          onTap: () {
-            // print("Tap");
-          },
+        child: DropdownSearch<String>(
+          items: listBreed,
+          selectedItem: valueBreedName(),
+          dropdownDecoratorProps: const DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(
+              border: InputBorder.none,
+            ),
+          ), //remove border outline
+          popupProps: const PopupProps.menu(
+            menuProps: MenuProps(
+                backgroundColor: lightBrown, shadowColor: Colors.black),
+            showSearchBox: true,
+          ),
           onChanged: (value) {
             // print("DropDown Changed");
             setState(() {
@@ -185,10 +254,10 @@ class _MyHomePageState extends State<MyHomePage> {
     var response = await http.get(Uri.parse(listBreedURL));
     if (response.statusCode == 200) {
       var jsonResp = jsonDecode(response.body);
-
       //Get Map["message"]
       // listOfBreed = jsonResp["message"];
       var dogBreeds = jsonResp["message"];
+      print(jsonResp["message"]);
       List<String> tempDogBreeds = [];
       List<String> tempDogBreedsURL = [];
 
@@ -238,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // print(selectedBreed);
     // print("SelectedBreedIndex: $selectedBreedIndex");
 
-    return "https://dog.ceo/api/breed/${listBreedURLFormat[selectedBreedIndex]}/images/random/$_counter";
+    return "https://dog.ceo/api/breed/${listBreedURLFormat[selectedBreedIndex]}/images/random/$_selectedSearchCount";
   }
 
   ///
@@ -270,6 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       setState(() {
         imageURL = jsonResp["message"];
+        displayCount = imageURL.length;
       });
       // print(imageURL); //test
 
@@ -330,7 +400,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       decoration: BoxDecoration(
                           image: DecorationImage(image: NetworkImage(url))),
                     ),
-                    Text("URL: $url"),
+                    TextButton(
+                      child: Text("URL: $url"),
+                      onPressed: () async {
+                        Uri myUrl = Uri.parse(url);
+                        if (!await launchUrl(myUrl,
+                            mode: LaunchMode.inAppWebView)) {
+                          throw 'Could not launch $url';
+                        }
+                      },
+                    ),
                     //close button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -355,6 +434,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               savedImagesPreset.add(url);
                             }
                             saveImages();
+                            Navigator.pop(context);
                           },
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all(darkBrown),
@@ -368,8 +448,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () {
                             if (savedImagesPreset.contains(url)) {
                               savedImagesPreset.remove(url);
-                            }
+                            } else {}
                             saveImages();
+                            Navigator.pop(context);
                           },
                           style: ButtonStyle(
                             backgroundColor: WidgetStateProperty.all(darkBrown),
@@ -396,9 +477,15 @@ class _MyHomePageState extends State<MyHomePage> {
   void populateImageURL(List listImageURL) {
     listImgWidget.clear(); //clear widget
     setState(() {
-      listImgWidget = listImageURL.map<TextButton>((dynamic value) {
-        return imgPopUp(value);
+      listImgWidget = listImageURL.map<Container>((dynamic value) {
+        //create a container so that the image that is populated shows up more uniform
+        return Container(
+          color: darkBrown, //change container color to theme
+          child: imgPopUp(
+              value), //call upo function that creates a textbutton for each picture
+        );
       }).toList();
+      displayCount = listImgWidget.length;
     });
   }
 
@@ -422,13 +509,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   ///
-  /// Save Pictures of Dog
+  /// Save All Data
   ///
   Future saveData() async {
     await myPrefs.setInt("breedIndex", selectedBreedIndex);
-    await myPrefs.setInt("counter", _counter);
+    await myPrefs.setInt("counter", _selectedSearchCount!);
   }
 
+  ///
+  ///Save Pictures of Dog
+  ///
   Future saveImages() async {
     await myPrefs.setStringList("savedImages", savedImagesPreset);
   }
@@ -446,25 +536,12 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedBreedIndex = tempBreedIndex;
       }
       if (tempCounter != null) {
-        _counter = tempCounter;
-        counterTermController.text = _counter.toString();
+        _selectedSearchCount = tempCounter;
       }
       if (tempSavedList != null) {
         savedImagesPreset = tempSavedList;
       }
     });
-  }
-
-//Initial State
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      getListOfBreed();
-      counterTermController.text = _counter.toString();
-      getRandImage();
-    });
-    init();
   }
 
   ///
@@ -477,188 +554,188 @@ class _MyHomePageState extends State<MyHomePage> {
     await restoreData();
   }
 
+//Initial State
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getListOfBreed();
+      getRandImage();
+    });
+    init();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-// #region TitleBar
-      appBar: AppBar(
-          backgroundColor: mediumBrown,
-          title: Row(
-            children: [
-              Expanded(child: Image.asset("assets/images/paws.png")),
-              customText(widget.title, 28),
-              Expanded(child: Image.asset("assets/images/paws.png")),
-            ],
-          )),
-// #endregion
-      body: Container(
+    return Container(
 // #region BACKGROUND
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-            //add gradient background
-            gradient: LinearGradient(
-                begin: Alignment.bottomRight,
-                end: Alignment.topLeft,
-                colors: [darkBrown, lightBrown])),
+      height: double.infinity,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+          //add gradient background
+          gradient: LinearGradient(
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
+              colors: [darkBrown, lightBrown])),
 // #endregion
 // #region MAIN
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              //Dog Breed Widget
-
-              //Increment/Decrement Widget
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        SizedBox(
-                            height: 25, child: customText("Dog Breed", 20)),
-                        dropDownButton(),
-                        SizedBox(
-                            height: 25,
-                            child: customText("Display Amount", 20)),
-                        Row(children: [
-                          FloatingActionButton(
-                            onPressed: _decrementCounter,
-                            tooltip: 'Decrement',
-                            backgroundColor: darkBrown,
-                            foregroundColor: Colors.white,
-                            child: const Icon(Icons.exposure_minus_1),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          children: <Widget>[
+            //Dog Breed Widget
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      //Dog Breed Title
+                      SizedBox(height: 25, child: customText("Dog Breed", 20)),
+                      dropDownButton(),
+                      SizedBox(
+                          height: 25, child: customText("Display Amount", 20)),
+                      DropdownSearch<int>(
+                        items: numberList,
+                        dropdownDecoratorProps: const DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            border: InputBorder.none,
                           ),
-                          SizedBox(
-                            width: 50,
-                            child: TextField(
-                              keyboardType: TextInputType.number,
-                              controller: counterTermController,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              decoration: InputDecoration(
-                                fillColor: Colors.white,
-                                filled: true,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(0),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  //Check if the displayed is null, auto result back to 1
-                                  if (int.tryParse(
-                                          counterTermController.text) ==
-                                      null) {
-                                    _counter = 1;
-                                    counterTermController.text =
-                                        _counter.toString();
-                                  }
-                                  if (int.tryParse(
-                                          counterTermController.text)! >
-                                      maxCounter) {
-                                    _counter = maxCounter;
-                                    counterTermController.text =
-                                        _counter.toString();
-                                  }
-                                });
-                              },
-                            ),
+                        ), //remove border outline
+                        popupProps: const PopupProps.menu(
+                          menuProps: MenuProps(
+                            backgroundColor: lightBrown,
                           ),
-                          FloatingActionButton(
-                            onPressed: _incrementCounter,
-                            tooltip: 'Increment',
-                            backgroundColor: darkBrown,
-                            foregroundColor: Colors.white,
-                            child: const Icon(Icons.exposure_plus_1),
-                          ),
-                        ]),
-                      ],
-                    ),
-                  ),
-                  Container(
-                      color: darkBrown,
-                      width: 200,
-                      height: 200,
-                      child: imgPopUp(randImageURL)),
-                ],
-              ),
-              //Search Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  //Search Button
-                  ElevatedButton(
-                    onPressed: () async {
-                      getListOfImages();
-                      await saveImages();
-                    },
-                    style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
                         ),
-                        backgroundColor: darkBrown),
-                    child:
-                        customText("Search", 15, FontWeight.w500, lightBrown),
-                  ),
-                  //Load Saved Images
-                  ElevatedButton(
-                    onPressed: () async {
-                      populateImageURL(savedImagesPreset);
-                      await saveData();
-                    },
-                    style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
-                        ),
-                        backgroundColor: lightBrown),
-                    child: customText(
-                        "Load Saved Images", 15, FontWeight.w500, darkBrown),
-                  ),
-                  //Random Button
-                  ElevatedButton(
-                    onPressed: () {
-                      getRandImage();
-                    },
-                    style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5.0),
-                        ),
-                        backgroundColor: darkBrown),
-                    child:
-                        customText("Random", 15, FontWeight.w500, lightBrown),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              //Images
-              Expanded(
-                child: SingleChildScrollView(
-                  child: GridView.count(
-                    shrinkWrap: true,
-                    primary: false,
-                    padding: const EdgeInsets.all(10),
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 5,
-                    crossAxisCount: 2,
-                    children: listImgWidget,
+                        selectedItem: _selectedSearchCount,
+                        onChanged: (int? newValue) {
+                          setState(() {
+                            _selectedSearchCount = newValue;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
+                Container(
+                    color: darkBrown,
+                    width: 200,
+                    height: 200,
+                    child: imgPopUp(randImageURL)),
+              ],
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            //Search Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                //Search Button
+                ElevatedButton(
+                  onPressed: () async {
+                    getListOfImages();
+                    await saveImages();
+                    setState(() {
+                      displayImageType = "Searched Images";
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                      backgroundColor: darkBrown),
+                  child: customText("Search", 15, FontWeight.w500, lightBrown),
+                ),
+                //Load Saved Images
+                ElevatedButton(
+                  onPressed: () async {
+                    populateImageURL(savedImagesPreset);
+                    await saveData();
+                    setState(() {
+                      displayImageType = "Saved Images";
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                      backgroundColor: lightBrown),
+                  child: customText(
+                      "Load Saved Images", 15, FontWeight.w500, darkBrown),
+                ),
+                //Random Button
+                ElevatedButton(
+                  onPressed: () {
+                    getRandImage();
+                  },
+                  style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                      backgroundColor: darkBrown),
+                  child: customText("Random", 15, FontWeight.w500, lightBrown),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 25,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text("Type: $displayImageType"),
+                  Text("Results Found: $displayCount")
+                ],
               ),
-            ],
-          ),
+            ),
+            //Images
+            Expanded(
+              child: SingleChildScrollView(
+                child: GridView.count(
+                  shrinkWrap: true,
+                  primary: false,
+                  padding: const EdgeInsets.all(10),
+                  crossAxisSpacing: 5,
+                  mainAxisSpacing: 5,
+                  crossAxisCount: 2,
+                  children: listImgWidget,
+                ),
+              ),
+            ),
+          ],
         ),
-// #endregion
       ),
-      //Create a bottom navigation bar to navigate between main content page and documentation page
-      bottomNavigationBar:
-          BottomNavigationBar(items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(icon: Icon(Icons.home)),
-        BottomNavigationBarItem(icon: Icon(Icons.description)),
-      ]),
     );
+  }
+}
+
+///
+///Page Created For Documentation
+///
+class DocumentationPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+        child: Padding(
+      padding: EdgeInsets.all(8.0),
+      child: SingleChildScrollView(
+          child: Column(children: [
+        Text(
+          "This project is an API-based application designed to showcase the aesthetics of various dog breeds through images. The app is portrait-oriented and features a theme based on a spectrum of the color brown.",
+        ),
+        Text("Key Features:"),
+        Text(
+            "1.	Automatic Image Display:\nUpon loading, the app automatically displays a random picture of any dog breed. This feature ensures that users are greeted with a fresh and engaging image each time they open the app."),
+        Text(
+            "\n2.	Search Functionality:\nUsers can search for specific dog breeds and specify the number of images they want to be generated. This functionality is inspired by Gif Finder, which simplifies the process of finding and displaying multiple images."),
+        Text(
+            "\n3.	Challenges and Solutions:\n\ta.	Dog CEO API Integration:\nThe Dog CEO website's documentation lacked specifics on URL formatting, leading to initial difficulties. After multiple debugging sessions, I figured out that the HTTP URL returns a complex map structure, with the needed information nested within segments or another map.\n\tb.	Breed List Formatting:\nThe Dog CEO API lists breeds and sub-breeds in a reversed format (e.g., 'greyhound Italian' instead of 'Italian Greyhound'). To make this more user-friendly for English speakers, I had to swap the names and ensure proper capitalization for aesthetic purposes.\n\tc.	Image Quantity Search:\nAlthough the Dog CEO API supports searching for a specific number of images, this feature was not well-documented. Through trial and error, I discovered this option and implemented it, avoiding the need for a for loop."),
+        Text(
+            "\n4.	User Interface Enhancements:\na.	Image Count Slider:\nInitially, I implemented a slider for users to select the number of images to load. However, this feature did not look right and took a considerable amount of time to implement. I eventually reverted to a dropdown menu for simplicity and aesthetic satisfaction.\nb.	Image Container:\nInitially, images were displayed without a container, leading to a disorganized appearance. Based on user feedback, I added a container to make the images more uniform and visually appealing.\nc.	Save and Delete Buttons:\nThe save and delete buttons lacked visual feedback, making it unclear whether the actions were successful. I implemented Navigator.pop() to close the action, providing users with a clear indication that their action was completed."),
+        Text(
+            "\n5.	Additional Features:\na.	Dropdown Search Package:\nUsers expressed dissatisfaction with the dropdown search package, as it required manual scrolling to find a breed. I made adjustments to improve the search functionality, allowing for quicker and more efficient breed selection.\nb.	Saved Preferences:nUsers can save their search options and individually saved images. These preferences can be reloaded with a button click or upon restarting the app, enhancing user convenience.\nc.	Image Details Popup:\nWhen users click on a dog image, a popup appears with more details, including the URL to the image. Users can click on the URL to view the image on the web, providing additional context and information.\nd.	Pages\nI was able to create a page for the app and another page for the documentation. I had trouble with this as the class lectures doesn’t go into depth how to implement this. Looking through YouTube videos and experimenting, I was able to implement this."),
+      ])),
+    ));
   }
 }
